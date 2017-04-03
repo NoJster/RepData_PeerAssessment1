@@ -21,7 +21,7 @@ median(steps_per_day$daily_steps)
 ## average daily activity pattern
 avg_steps_per_interval <- summarize( 
   group_by(clean_data, interval), avg_steps = mean(steps))
-plot(avg_steps_per_interval$interval, avg_steps_per_interval$avg_steps, 
+xyplot(avg_steps_per_interval$avg_steps~avg_steps_per_interval$interval, 
      type = "l", 
      main = "Average number of steps per 5-minute interval", 
      xlab = "Number of 5-minute interval", 

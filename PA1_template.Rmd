@@ -4,16 +4,19 @@ output:
   html_document:
     keep_md: true
 ---
+## Initial setup tasks
+
+To add to our convenience, we define global knitr options.
 ```{r include=FALSE}
 knitr::opts_knit$set(echo = TRUE)
 ```
 
-## Loading required libraries
+We will be using several R libraries, which have to be loaded upfront (and installed in case they are not yet available)
 ```{r}
-library(data.table, quietly = TRUE)
-library(dtplyr, quietly = TRUE)
-library(dplyr, quietly = TRUE)
-library(lattice, quietly = TRUE)
+library(data.table)
+library(dtplyr)
+library(dplyr)
+library(lattice)
 ```
 
 
@@ -43,8 +46,8 @@ median(steps_per_day$daily_steps)
 ```{r}
 avg_steps_per_interval <- summarize( 
   group_by(clean_data, interval), avg_steps = mean(steps))
-plot(avg_steps_per_interval$interval, avg_steps_per_interval$avg_steps, 
-     type = "l", 
+xyplot(avg_steps_per_interval$avg_steps~avg_steps_per_interval$interval, 
+     type = "l",
      main = "Average number of steps per 5-minute interval", 
      xlab = "Number of 5-minute interval", 
      ylab = "Average number of steps across all days")
