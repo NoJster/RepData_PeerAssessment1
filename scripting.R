@@ -1,46 +1,24 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
-```{r include=FALSE}
-knitr::opts_knit$set(echo = TRUE)
-```
+## libs
+library(dplyr)
+library(lattice)
 
-## Loading required libraries
-```{r}
-library(data.table, quietly = TRUE)
-library(dtplyr, quietly = TRUE)
-library(dplyr, quietly = TRUE)
-library(lattice, quietly = TRUE)
-```
-
-
-## Loading and preprocessing the data
-Downloading, unzipping, reading data and cleaning up the date
-```{r}
+## preprocessing
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", 
               "activity.zip")
 unzip("activity.zip")
 my_data <- read.csv("activity.csv")
 my_data$date <- as.Date(my_data$date)
 clean_data <- my_data[!is.na(my_data$steps), ]
-```
 
-## What is mean total number of steps taken per day?
-```{r}
+## mean analysis
 steps_per_day <- summarize(group_by(clean_data, date), daily_steps = sum(steps))
 hist(steps_per_day$daily_steps, 
      main = "Histogram of total number of steps taken each day", 
      xlab = "Steps per day")
 mean(steps_per_day$daily_steps)
 median(steps_per_day$daily_steps)
-```
 
-
-## What is the average daily activity pattern?
-```{r}
+## average daily activity pattern
 avg_steps_per_interval <- summarize( 
   group_by(clean_data, interval), avg_steps = mean(steps))
 plot(avg_steps_per_interval$interval, avg_steps_per_interval$avg_steps, 
@@ -49,11 +27,8 @@ plot(avg_steps_per_interval$interval, avg_steps_per_interval$avg_steps,
      xlab = "Number of 5-minute interval", 
      ylab = "Average number of steps across all days")
 avg_steps_per_interval[which.max(avg_steps_per_interval$avg_steps),]
-```
 
-
-## Imputing missing values
-```{r}
+## imputing missing values
 count(my_data[is.na(my_data$steps),])
 dt <- as.data.table(my_data)
 dt$steps <- as.numeric(dt$steps)
@@ -68,11 +43,8 @@ hist(steps_per_day_imp$daily_steps,
      xlab = "Steps per day")
 mean(steps_per_day_imp$daily_steps)
 median(steps_per_day_imp$daily_steps)
-```
 
-
-## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+## weekdays vs. weekends
 dt <- dt %>%  
   mutate(day_indicator = 
            ifelse(weekdays(date) == "Saturday" | weekdays(date) == "Sunday", 
@@ -86,4 +58,3 @@ xyplot(avg~interval|day_indicator,
        main = "Average steps per interval and per type of day",
        xlab = "Number of 5-minute interval",
        ylab = "Average number of steps")
-```
