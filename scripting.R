@@ -29,7 +29,8 @@ xyplot(avg_steps_per_interval$avg_steps~avg_steps_per_interval$interval,
 avg_steps_per_interval[which.max(avg_steps_per_interval$avg_steps),]
 
 ## imputing missing values
-count(my_data[is.na(my_data$steps),])
+number_of_NAs <- count(my_data[is.na(my_data$steps),])
+number_of_NAs / count(my_data)
 dt <- as.data.table(my_data)
 dt$steps <- as.numeric(dt$steps)
 dt <- dt %>% 
@@ -43,6 +44,8 @@ hist(steps_per_day_imp$daily_steps,
      xlab = "Steps per day")
 mean(steps_per_day_imp$daily_steps)
 median(steps_per_day_imp$daily_steps)
+mean(steps_per_day$daily_steps)
+median(steps_per_day$daily_steps)
 
 ## weekdays vs. weekends
 dt <- dt %>%  

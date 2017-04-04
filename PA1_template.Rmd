@@ -21,7 +21,15 @@ library(lattice)
 
 
 ## Loading and preprocessing the data
-Downloading, unzipping, reading data and cleaning up the date
+To ensure that we are using the latest data and that the data is in a practical 
+format, we perform the following steps:
+
+1. Download data from the web address supplied in the task description
+2. Unzip the zip archive
+3. Read contents of the zip archive
+4. Cast date field, read in as Factor, into date
+5. Create a subset of the original data with the NAs excluded
+
 ```{r}
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", 
               "activity.zip")
@@ -31,7 +39,15 @@ my_data$date <- as.Date(my_data$date)
 clean_data <- my_data[!is.na(my_data$steps), ]
 ```
 
-## What is mean total number of steps taken per day?
+## What is the total/mean/median total number of steps taken per day?
+For analyzing the total/mean/median number of steps taken per day, we utilize the
+summarize and group_by functions of dplyr.
+With the summarized data frame steps_per_day, we answer the questions as follows:
+
+- Total number of steps: Histogram to show the result
+- Mean number of steps: direct R output
+- Median number of steps: direct R output
+
 ```{r}
 steps_per_day <- summarize(group_by(clean_data, date), daily_steps = sum(steps))
 hist(steps_per_day$daily_steps, 
@@ -43,28 +59,65 @@ median(steps_per_day$daily_steps)
 
 
 ## What is the average daily activity pattern?
+To analyze average daily activity patterns, we summarize the original data which
+has been cleansed of any NAs for every 5 minute interval of every day,
 ```{r}
 avg_steps_per_interval <- summarize( 
   group_by(clean_data, interval), avg_steps = mean(steps))
+```
+Once this new data frame has been constructed, we execute the two tasks:
+
+1. Plot a time series of the average number of steps per 5-minute interval across
+all days
+```{r}
 xyplot(avg_steps_per_interval$avg_steps~avg_steps_per_interval$interval, 
      type = "l",
      main = "Average number of steps per 5-minute interval", 
      xlab = "Number of 5-minute interval", 
      ylab = "Average number of steps across all days")
+```
+
+2. Which 5-minute interval contains the maximum number of steps
+```{r}
 avg_steps_per_interval[which.max(avg_steps_per_interval$avg_steps),]
 ```
 
 
 ## Imputing missing values
+Before we start imputing missing values, it is a good idea to assess how many rows
+in the original data contain NAs, we do this as follows:
 ```{r}
-count(my_data[is.na(my_data$steps),])
+number_of_NAs <- count(my_data[is.na(my_data$steps),])
+```
+From this, we know what percentage of the overall data is NA:
+```{r}
+number_of_NAs / count(my_data)
+```
+
+Moving on to imputing the missing values. Since we are allowed to use relatively
+trivial imputing methods, we decided on imputing NAs by the average of steps in
+this interval.
+```{r}
 dt <- as.data.table(my_data)
 dt$steps <- as.numeric(dt$steps)
 dt <- dt %>% 
   group_by(interval) %>% 
   mutate(steps = ifelse(is.na(steps), mean(steps, na.rm=TRUE), steps))
+```
 
+Having the data table with the imputed NAs created, we newly summarize as above,
+but now with imputed values in place.
+```{r}
 steps_per_day_imp <- summarize(group_by(dt, date), daily_steps = sum(steps))
+```
+
+This now allows us to run the analysis from before again, but this time with imputed
+values. Again, this will answer the following
+
+- Total number of steps: Histogram to show the result
+- Mean number of steps: direct R output
+- Median number of steps: direct R output
+```{r}
 hist(steps_per_day_imp$daily_steps, 
      main = "Histogram of total number of steps taken each day",
      sub = "NAs imputed by mean of 5-minute interval",
@@ -72,15 +125,31 @@ hist(steps_per_day_imp$daily_steps,
 mean(steps_per_day_imp$daily_steps)
 median(steps_per_day_imp$daily_steps)
 ```
-
+Comparing the mean/median of the imputed and non-imputed data frame shows us that
+the two respective value pairs are close to, or even exactly, identical.
+```{r}
+mean(steps_per_day_imp$daily_steps)
+median(steps_per_day_imp$daily_steps)
+mean(steps_per_day$daily_steps)
+median(steps_per_day$daily_steps)
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+Lastly, we add a column to our data, to indicate whether a given date is a weekday
+or weekend day. Weekdays, in our analysis, are from Mon-Fri, while weekends comprise
+Saturday and Sunday.
 ```{r}
 dt <- dt %>%  
   mutate(day_indicator = 
            ifelse(weekdays(date) == "Saturday" | weekdays(date) == "Sunday", 
                   "weekend", 
                   "weekday"))
+```
+
+With this new column, we can summarize and average of the different types of days and
+finally plot the average number of steps of 5-minute interval differentiated by 
+weekdays and weekends
+```{r}
 avg_steps_per_daytype <- summarize(group_by(dt, interval, day_indicator), avg = mean(steps))
 attach(avg_steps_per_daytype)
 xyplot(avg~interval|day_indicator, 
